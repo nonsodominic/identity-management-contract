@@ -266,3 +266,28 @@
   )
 )
 
+;; Read-only functions
+
+(define-read-only (get-identity-info (identity principal))
+  (map-get? identities identity)
+)
+
+(define-read-only (get-identity-metadata (identity principal))
+  (map-get? identity-metadata identity)
+)
+
+(define-read-only (get-following-status (follower principal) (following principal))
+  (map-get? identity-relationships { follower: follower, following: following })
+)
+
+(define-read-only (get-identity-count)
+  (var-get identity-count)
+)
+
+(define-read-only (is-identity-registered (identity principal))
+  (is-some (map-get? identities identity))
+)
+
+(define-read-only (is-identity-verified (identity principal))
+  (get verification-status (unwrap! (map-get? identities identity) false))
+)
