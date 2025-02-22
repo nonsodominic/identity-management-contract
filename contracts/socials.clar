@@ -225,3 +225,44 @@
   )
 )
 
+;; Recovery address management
+(define-public (set-recovery-address (recovery principal))
+  (let
+    ((caller tx-sender)
+     (identity-data (unwrap! (map-get? identities caller) ERR-IDENTITY-NOT-FOUND)))
+    (asserts! (is-none (get recovery-address identity-data)) ERR-RECOVERY-EXISTS)
+    (map-set identities caller
+      (merge identity-data
+        {
+          recovery-address: (some recovery),
+          last-updated: block-height
+        }
+      )
+    )
+    (ok true)
+  )
+)
+
+;; Enhanced badge management with validation
+(define-public (award-badge (to principal) (badge (string-ascii 50)))
+  (let
+    ((caller tx-sender)
+     (target-metadata (unwrap! (map-get? identity-metadata to) ERR-IDENTITY-NOT-FOUND)))
+    
+    ;; Validate inputs
+    (asserts! (is-eq caller (var-get admin-address)) ERR-UNAUTHORIZED)
+    (asserts! (validate-badge badge) ERR-INVALID-BADGE)
+    (asserts! (is-some (map-get? identities to)) ERR-IDENTITY-NOT-FOUND)
+    
+    ;; Update badges
+    (ok (map-set identity-metadata to
+      (merge target-metadata
+        {
+          badges: (unwrap-panic (as-max-len? 
+            (append (get badges target-metadata) badge)
+            u10))
+        }
+      )))
+  )
+)
+
