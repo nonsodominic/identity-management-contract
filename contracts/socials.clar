@@ -91,3 +91,35 @@
   )
 )
 
+;; Function to set avatar
+(define-public (set-avatar (avatar-url (string-utf8 256)))
+  (let
+    (
+      (caller tx-sender)
+      (safe-url (as-max-len? avatar-url u256))
+    )
+    (asserts! (is-some (map-get? identities caller)) ERR-IDENTITY-NOT-FOUND)
+    (asserts! (is-some safe-url) ERR-INVALID-AVATAR)
+    (map-set identities caller
+      (merge (unwrap-panic (map-get? identities caller))
+        { avatar: safe-url }
+      )
+    )
+    (ok true)
+  )
+)
+
+;; Read-only function to get identity information
+(define-read-only (get-identity-info (identity principal))
+  (map-get? identities identity)
+)
+
+;; Read-only function to get the total number of registered identities
+(define-read-only (get-identity-count)
+  (var-get identity-count)
+)
+
+;; Function to check if an identity is registered
+(define-read-only (is-identity-registered (identity principal))
+  (is-some (map-get? identities identity))
+)
